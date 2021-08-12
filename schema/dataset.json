@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dataset.json",
+  "title": "Dataset",
+  "description": "Configuration for a dataset used to train or evaluate a deep-learning-based clustering method.",
+  "type": "object",
+  "properties": {
+    "dataset": {
+      "description": "Identifier (class name in 'torchvision.datasets') of the dataset to use. Currently, only datasets in 'torchvision.datasets' are supported.",
+      "type": "string"
+    },
+    "batch_size": {
+      "description": "Batch size to use.",
+      "type": "number"
+    },
+    "num_clusters": {
+      "descriptions": "Number of clusters to use.",
+      "type": "number"
+    },
+    "name": {
+      "description": "Name used to reference this dataset configuration, e.g. in design patterns.",
+      "type": "string"
+    },
+    "order": {
+      "description": "Order in which the clustering method should process this dataset configuration. Dataset configurations are processed in ascending order of their values of this property.",
+      "type": "number"
+    },
+    "enabled": {
+      "description": "Specifies whether to process this dataset configuration (true by default).",
+      "type": "boolean",
+      "default": "true"
+    },
+    "phases": {
+      "description": "For each dataset configuration, all phases of this clustering method are processed once, unless specified otherwise. If specified, contains the names of the phases to use when processing this dataset configuration. If omitted, all phases are used.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "transforms": {
+      "description": "Specifies the transforms used to process samples loaded from this dataset by default, i.e. whenever not working with design patterns requesting a specific batch augmentation. Properties will be passed as named arguments to the constructor of the respective transform. If omitted, only a 'ToTensor()' transform will be used.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "description": "The class name (in 'torchvision.transforms') of the transform.",
+            "type": "string"
+          }
+        },
+        "required": ["type"]
+      }
+    },
+    "batch_augmentations": {
+      "description": "Specifies a list of batch augmentation configurations which can be referenced by different design patterns via the 'batch_augmentation_name' property to obtain identically augmented versions of the current batch. The transforms of the specified batch augmentation will be used instead of the default transforms specified for this dataset. Useful when working with design patterns which require multiple different augmentations of a batch.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "Name of this batch augmentation",
+            "type": "string"
+          },
+          "transforms": {
+            "description": "Specifies the transforms to be used to create this batch augmentation. Properties will be passed as named arguments to the constructor of the respective transform.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "description": "The class name (in 'torchvision.transforms') of the transform.",
+                  "type": "string"
+                }
+              },
+              "required": ["type"]
+            }
+          }      
+        },
+        "required": ["name", "transforms"]
+      }
+    },
+    "reinitialize_mappings": {
+      "description": "Specifies whether the parameters of all trainable mappings (and the feature-space centroids) should be reinitialized when switching from the previous dataset configuration to this one (true by default).",
+      "type": "boolean",
+      "default": true
+    },
+    "shuffle": {
+      "description": "Specifies whether to reshuffle the samples of the dataset at every epoch (false by default).",
+      "type": "boolean",
+      "default": false
+    },
+    "pin_memory": {
+      "description": "Specifies whether to pin memory when loading samples from the dataset (false by default).",
+      "type": "boolean",
+      "default": false
+    },
+    "num_workers": {
+      "description": "Specifies the number of subprocesses to use for data loading (0 by default, meaning the data will be loaded by the main process).",
+      "type": "number",
+      "default": 0
+    },
+    "index_of_first_sample_to_use": {
+      "description": "If specified, the index of the first sample which should be used. By default, the entire dataset is used.",
+      "type": "number"
+    },
+    "index_of_last_sample_to_use": {
+      "description": "If specified, the index of the last sample which should be used. By default, the entire dataset is used.",
+      "type": "number"
+    }
+  },
+  "required": ["dataset", "batch_size", "num_clusters"]
+}

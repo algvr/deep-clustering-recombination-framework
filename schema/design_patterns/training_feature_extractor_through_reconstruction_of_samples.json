@@ -1,0 +1,41 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "design_patterns/training_feature_extractor_through_reconstruction_of_samples.json",
+    "title": "Configuration for the 'training a feature extractor through reconstruction of samples' design pattern.",
+    "type": "object",
+    "properties": {
+      "pattern": {
+        "description": "The identifier of the design pattern.",
+        "type": "string",
+        "enum": ["training_feature_extractor_through_reconstruction_of_samples"]
+      },
+      "encoder_name": {
+        "description": "The name of the encoder mapping (feature extractor) to be used.",
+        "type": "string"
+      },
+      "decoder_name": {
+        "description": "The name of the decoder mapping to be used.",
+        "type": "string"
+      },
+      "loss_reduction_method": {
+        "description": "Specifies how to reduce the element-wise squared differences between the original samples and their reconstructions in a batch.",
+        "type": "string",
+        "enum": ["mean_across_samples", "mean_across_elements", "sum"],
+        "default": "mean_across_samples"
+      },
+      "loss_weight": {
+        "description": "A hyperparameter by which to weight the loss of this design pattern.",
+        "type": "number",
+        "default": 1.0
+      },
+      "loss_optimizer_group_name": {
+        "description": "Specifies the name of the optimizer group that should optimize the loss of this design pattern.",
+        "type": "string",
+        "default": "default"
+      },
+      "batch_augmentation_name": {
+        "description": "Specifies the identifier of the augmentation of the current batch to be used with this design pattern. Two design patterns having the same value for the 'batch_augmentation_name' property will receive identically augmented versions of the current batch. If omitted, only the default transforms specified with the current dataset configuration are applied."
+      }
+    },
+    "required": ["encoder_name", "decoder_name"]
+  }

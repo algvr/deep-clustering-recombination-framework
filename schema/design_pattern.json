@@ -1,0 +1,33 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "pattern.json",
+    "title": "Design pattern",
+    "description": "Configuration for a design pattern used during some training phase of a deep-learning-based clustering method.",
+    "type": "object",
+    "properties": {
+      "pattern": {
+        "description": "The identifier of the design pattern.",
+        "type": "string"
+      },
+      "enabled": {
+        "description": "Specifies whether to use this design pattern configuration (true by default).",
+        "type": "boolean",
+        "default": true
+      },
+      "loss_report_interval": {
+        "description": "If specified, the interval, in iterations, between reports of the running values of losses optimized as part of this design pattern. If omitted or set to a value smaller than 1, running values of losses are not reported.",
+        "type": "number"
+      }
+    },
+    "oneOf": [
+      { "$ref": "design_patterns/training_feature_extractor_through_reconstruction_of_samples.json" },
+      { "$ref": "design_patterns/encouraging_cluster_formation_by_minimizing_divergence_between_current_and_target_cluster_assignment_distribution.json" },
+      { "$ref": "design_patterns/learning_feature_representations_by_using_contrastive_learning_and_data_augmentation.json" },
+      { "$ref": "design_patterns/learning_invariance_to_transformations_by_using_assignment_statistics_vectors_and_data_augmentation.json" },
+      { "$ref": "design_patterns/preventing_cluster_degeneracy_by_maximizing_entropy_of_soft_assignments.json" },
+      { "$ref": "design_patterns/training_feature_extractor_by_using_adversarial_interpolation.json" },
+      { "$ref": "design_patterns/facilitating_training_of_feature_extractor_by_using_layer_wise_pretraining.json" },
+      { "$ref": "design_patterns/encouraging_cluster_formation_by_reinforcing_current_assignment_of_samples_to_clusters.json" }
+    ],
+    "required": ["pattern"]
+  }

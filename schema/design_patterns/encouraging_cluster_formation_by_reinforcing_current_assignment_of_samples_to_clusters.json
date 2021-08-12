@@ -1,0 +1,195 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "design_patterns/encouraging_cluster_formation_by_reinforcing_current_assignment_of_samples_to_clusters.json",
+    "title": "Configuration for the 'encouraging cluster formation by reinforcing the current assignment of samples to clusters' design pattern.",
+    "type": "object",
+    "properties": {
+      "pattern": {
+        "description": "The identifier of the design pattern.",
+        "type": "string",
+        "enum": ["encouraging_cluster_formation_by_reinforcing_current_assignments_of_samples_to_clusters"]
+      },
+      "classifier_name": {
+        "description": "If specified and soft assignments are used, the name of the classifier to obtain the soft assignments from. If not specified, the default cluster assignment strategy of the method is used to obtain soft assignments for this design pattern. Must be specified when using multiple classifiers, or the classifier to be trained is not used to obtain the cluster assignments computed by the method's default cluster assignment strategy.",
+        "type": "string"
+      },
+      "loss_type": {
+        "description": "The type of loss to use.",
+        "type": "string",
+        "enum": ["l2", "cross_entropy"]
+      },
+      "sample_selection_criterion": {
+        "description": "Given a particular cluster, specifies the criterion by which to select samples, assigned to that cluster, which this design pattern should use in conjunction with the representative of the cluster to perform optimization.",
+        "type": "string",
+        "enum": ["all_samples", "threshold_on_feature_representation_distance_to_centroid", "threshold_on_soft_assignment_to_cluster"]
+      },
+      "threshold_on_feature_representation_distance_to_centroid": {
+        "description": "If 'threshold_on_feature_representation_distance_to_centroid' is used as the sample selection criterion, specifies the maximum L2 distance of a sample to a centroid in order for the design pattern to use the sample-cluster pair to perform optimization."
+      },
+      "threshold_on_soft_assignment_to_cluster": {
+        "description": "If 'threshold_on_soft_assignment_to_cluster' is used as the sample selection criterion, specifies the minimum value of a sample's soft assignment to a cluster in order for the design pattern to use the sample-cluster pair to perform optimization."
+      },
+      "cluster_selection_criterion": {
+        "description": "Given a particular sample, specifies the criterion by which to select cluster representatives (e.g. centroids) which this design pattern should use in conjunction with the sample to perform optimization.",
+        "type": "string",
+        "enum": ["all_clusters", "nearest_centroid", "argmax_of_soft_assignments"]
+      },
+      "sample_cluster_pair_loss_weighting_term": {
+        "description": "The term by which to weight the loss computed for a sample and an associated cluster (default: 'unit').",
+        "type": "string",
+        "enum": ["unit", "l2_distance_of_feature_representation_to_centroid", "gaussian_kernel_based_similarity_of_feature_representation_to_centroid", "soft_assignment_of_sample_to_cluster"],
+        "default": "unit"
+      },
+      "sample_representation": {
+        "description": "The form in which the sample appears in the design pattern's loss term.",
+        "type": "string",
+        "enum": ["original_sample", "decoder_reconstructed_sample", "feature_representation", "soft_assignments"]
+      },
+      "associated_feature_extractor_name": {
+        "description": "If 'feature_representation' is used as the sample representation, specifies the name of the feature extractor from which to obtain the feature representations to use with this design pattern. If not specified, the first trainable mapping with 'type' set to 'feature_extractor' is used.",
+        "type": "string"
+      },
+      "associated_encoder_name": {
+        "description": "If 'decoder_reconstructed_sample' is used as the sample representation, specifies the name of the encoder mapping of the autoencoder to transform the sample from the sample space to the feature space.",
+        "type": "string"
+      },
+      "associated_decoder_name": {
+        "description": "If 'decoder_reconstructed_sample' is used as the sample representation or 'centroid_processed_by_decoder' is used as the cluster representation, specifies the name of the decoder mapping of the autoencoder to reconstruct the sample/centroid from the feature space to the sample space.",
+        "type": "string"
+      },
+      "cluster_representation": {
+        "description": "The form in which the cluster appears in the design pattern's loss term.",
+        "type": "string",
+        "enum": ["centroid", "centroid_processed_by_decoder", "pseudolabel"]
+      },
+      "loss_weight": {
+        "description": "A hyperparameter by which to weight the loss of this design pattern.",
+        "type": "number",
+        "default": 1.0
+      },
+      "loss_optimizer_group_name": {
+        "description": "Specifies the name of the optimizer group that should optimize the loss of this design pattern.",
+        "type": "string",
+        "default": "default"
+      },
+      "batch_augmentation_name": {
+        "description": "Specifies the identifier of the augmentation of the current batch to be used with this design pattern. Two design patterns having the same value for the 'batch_augmentation_name' property will receive identically augmented versions of the current batch. If omitted, only the default transforms specified with the current dataset configuration are applied."
+      }
+    },
+    "required": ["loss_type", "sample_selection_criterion", "cluster_selection_criterion", "sample_representation", "cluster_representation"],
+    "allOf": [
+      {
+        "if": {
+          "properties": {
+            "sample_selection_criterion": { "const": "all_samples" }
+          }
+        },
+        "then": {
+          "properties": {
+            "threshold_on_feature_representation_distance_to_centroid": false,
+            "threshold_on_soft_assignment_to_cluster": false
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "sample_selection_criterion": { "const": "threshold_on_feature_representation_distance_to_centroid" }
+          }
+        },
+        "then": {
+          "properties": {
+            "threshold_on_feature_representation_distance_to_centroid": true,
+            "threshold_on_soft_assignment_to_cluster": false
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "sample_selection_criterion": { "const": "threshold_on_soft_assignment_to_cluster" }
+          }
+        },
+        "then": {
+          "properties": {
+            "threshold_on_feature_representation_distance_to_centroid": false,
+            "threshold_on_soft_assignment_to_cluster": true
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "sample_representation": { "const": "original_sample" }
+          }
+        },
+        "then": {
+          "properties": {
+            "cluster_representation": { "const": "centroid_processed_by_decoder" }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "sample_representation": { "const": "decoder_reconstructed_sample" }
+          }
+        },
+        "then": {
+          "properties": {
+            "associated_encoder_name": true,
+            "associated_decoder_name": true,
+            "cluster_representation": { "const": "centroid_processed_by_decoder" }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "sample_representation": { "const": "feature_representation" }
+          }
+        },
+        "then": {
+          "properties": {
+            "cluster_representation": { "const": "centroid" }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "sample_representation": { "const": "soft_assignments" }
+          }
+        },
+        "then": {
+          "properties": {
+            "cluster_representation": { "const": "pseudolabel" }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "loss_type": { "const": "cross_entropy" }
+          }
+        },
+        "then": {
+          "properties": {
+            "cluster_representation": { "const": "pseudolabel" }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "cluster_representation": { "const": "centroid_processed_by_decoder" }
+          }
+        },
+        "then": {
+          "properties": {
+            "associated_decoder_name": true
+          }
+        }
+      }
+    ]
+  }

@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "method.json",
+  "title": "Method",
+  "description": "Configuration for a deep-learning-based clustering method used on one or more datasets and combining trainable mappings, a cluster assignment strategy and design patterns applied during one or more training phases.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "Name of the clustering method.",
+      "type": "string"
+    },
+    "mappings": {
+      "description": "List of trainable mappings used by the clustering method.",
+      "type": "array",
+      "items": {
+        "$ref": "mapping.json"
+      }
+    },
+    "phases": {
+      "description": "List of training phases of the clustering method.",
+      "type": "array",
+      "items": {
+        "$ref": "phase.json"
+      }
+    },
+    "cluster_assignment_strategy": {
+      "description": "Information about the cluster assignment strategy used by the clustering method.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "Specifies the type of cluster assignment strategy used.",
+          "type": "string",
+          "enum": ["classifier", "classical_clustering_in_feature_space_after_phase", "feature_representation_centroid_similarity"]
+        },
+        "classifier_selection_criterion": {
+          "description": "If 'classifier' is used as the cluster assignment strategy, specifies the criterion to select which of the method's classifiers to use to obtain the samples' cluster assignments. If a performance-based cluster assigment strategy is used ('highest_*') and no performance evaluation has been performed yet, the average of the classifier outputs ('average') is used until the first performance evaluation has been performed.",
+          "type": "string",
+          "enum": ["highest_last_acc", "highest_last_nmi", "highest_last_ari", "highest_average_acc", "highest_average_nmi", "highest_average_ari", "average", "name", "first_declared"],
+          "default": "first_declared"
+        },
+        "classifier_name": {
+          "description": "If 'classifier' is used as the cluster assignment strategy and the classifier selection criterion is set to 'name', specifies the name of the classifier to use to obtain the samples' cluster assignments.",
+          "type": "string"
+        },
+        "centroid_initialization_classical_clustering_method": {
+          "description": "If feature-space centroids are used (as part of the cluster assignment strategy and/or design patterns) and the centroid initialization strategy is set to 'classical_clustering', specifies the classical clustering method to use to initialize the feature-space centroids.",
+          "type": "string",
+          "enum": ["k_means"]
+        },
+        "centroid_initialization_classical_clustering_num_restarts": {
+          "description": "If feature-space centroids are used (as part of a cluster assignment strategy and/or design patterns) and the centroid initialization strategy is set to 'classical_clustering', specifies the number of restarts of the classical clustering method to use to determine the best initialization of the feature-space centroids.",
+          "type": "number",
+          "default": 20
+        },
+        "centroid_recalculation_classical_clustering_method": {
+          "description": "If feature-space centroids are used (as part of a cluster assignment strategy and/or design patterns) and the centroid recalculation strategy is set to 'classical_clustering', specifies the classical clustering method to use to recalculate the feature-space centroids.",
+          "type": "string",
+          "enum": ["k_means"]
+        },
+        "centroid_recalculation_classical_clustering_num_restarts": {
+          "description": "If feature-space centroids are used (as part of a cluster assignment strategy and/or design patterns) and the centroid recalculation strategy is set to 'classical_clustering', specifies the number of restarts of the classical clustering method to use to determine the best initial values of the feature-space centroids.",
+          "type": "number",
+          "default": 20
+        },
+        "classical_clustering_method_after_phase": {
+          "description": "If 'classical_clustering_in_feature_space_after_phase' is used as the cluster assignment strategy, specifies the classical clustering method to use to obtain the samples' cluster assignments.",
+          "type": "string",
+          "enum": ["k_means"]
+        },
+        "classical_clustering_in_feature_space_after_phase": {
+          "description": "If 'classical_clustering_in_feature_space_after_phase' is used as the cluster assignment strategy, specifies the phase after which to perform classical clustering to obtain the samples' cluster assignments.",
+          "type": "string"
+        },
+        "classical_clustering_in_feature_space_after_phase_num_restarts": {
+          "description": "If 'classical_clustering_in_feature_space_after_phase' is used as the cluster assignment strategy, specifies the number of restarts of the classical clustering method to use to determine the best initialization of the centroids.",
+          "type": "number",
+          "default": 20
+        },
+        "associated_feature_extractor_name": {
+          "description": "If 'classical_clustering_in_feature_space_after_phase' or 'feature_representation_centroid_similarity' is used as the cluster assignment strategy, specifies the name of the feature extractor from which to obtain the feature representations upon which to perform classical clustering to obtain the samples' cluster assignments/the initial feature-space centroids, resp.\nIf not specified, the first trainable mapping with 'type' set to 'feature_extractor' is used.",
+          "type": "string"
+        },
+        "similarity_measure": {
+          "description": "If 'feature_representation_centroid_similarity' is used as the cluster assignment strategy, specifies the similarity measure to use to calculate the similarity between feature representations and centroids.",
+          "type": "string",
+          "enum": ["student_t", "gaussian"]
+        },
+        "gaussian_similarity_measure_inverse_temperature": {
+          "description": "If 'feature_representation_centroid_similarity' is used as the cluster assignment strategy and 'gaussian' is used as the similarity measure, specifies the schedule of the inverse temperature (alpha) parameter to use for the Gaussian kernel (alpha in [0, infinity)). A higher alpha corresponds to harder assignments.",
+          "properties": {
+            "fixed_value": {
+              "description": "Use a fixed value for the inverse temperature parameter.",
+              "type": "number"
+            },
+            "annealing_initial_value": {
+              "description": "The initial value for the inverse temperature parameter, if it is to be annealed. The annealing scheme follows that of DKM (deep k-means).",
+              "type": "number"
+            },
+            "annealing_final_value": {
+              "description": "The final value/cutoff threshold for the inverse temperature parameter, if it is to be annealed. The annealing scheme follows that of DKM (deep k-means).",
+              "type": "number"
+            },
+            "annealing_iterations_per_value": {
+              "description": "The number of iterations to maintain a single value of the inverse temperature parameter.",
+              "type": "number"
+            },
+            "oneOf": [
+              {
+                "properties": {
+                  "fixed_value": true
+                }
+              },
+              {
+                "properties": {
+                  "annealing_initial_value": true,
+                  "annealing_max_value": true,
+                  "annealing_iterations_per_value": true
+                }
+              }
+            ]
+          }
+        },
+        "centroid_initialization_strategy": {
+          "description": "If feature-space centroids are used (as part of a cluster assignment strategy or design patterns), specifies how the feature-space centroids are initialized.",
+          "type": "string",
+          "enum": ["classical_clustering", "random_feature_representations", "random_uniform_noise", "load_from_file"]
+        },
+        "centroid_recalculation_strategy": {
+          "description": "If feature-space centroids are used (as part of a cluster assignment strategy or design patterns), specifies how the feature-space centroids are recalculated.",
+          "type": "string",
+          "enum": ["fixed_centroids", "classical_clustering", "recalculation_by_design_pattern"]
+        },
+        "centroid_file_path": {
+          "description": "If feature-space centroids are used (as part of a cluster assignment strategy or design patterns) and the centroid initialization strategy is set to 'load_from_file', specifies the path (absolute, or relative to the directory of the method configuration file) of the torch file from which to load the feature-space centroids.",
+          "type": "string"
+        },
+        "centroid_recalculation_interval": {
+          "description": "If feature-space centroids are used (as part of a cluster assignment strategy or design patterns) and the centroid recalculation strategy is set to 'classical_clustering', specifies the interval, in iterations, between recalculation of the feature-space centroids.",
+          "type": "number"
+        },
+        "use_centroids_during_phases": {
+          "description": "List with names of the phases during which feature-space centroids will be used (as part of a cluster assignment strategy or design patterns); the feature-space centroids will be initialized as soon as any of the phases in this list is encountered. Does not affect centroids resulting from the classical clustering performed as part of the 'classical_clustering_in_feature_space_after_phase' cluster assignment strategy.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["type"],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "classical_clustering_in_feature_space_after_phase" }
+            }
+          },
+          "then": {
+            "properties": {
+              "classical_clustering_method_after_phase": true,
+              "classical_clustering_in_feature_space_after_phase": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": { "const": "feature_representation_centroid_similarity" }
+            }
+          },
+          "then": {
+            "properties": {
+              "similarity_measure": true,
+              "use_centroids_during_phases": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "centroid_initialization_strategy": { "const": "classical_clustering" }
+            }
+          },
+          "then": {
+            "properties": {
+              "centroid_initialization_classical_clustering_method": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "centroid_initialization_strategy": { "const": "load_from_file" }
+            }
+          },
+          "then": {
+            "properties": {
+              "centroid_file_path": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "centroid_recalculation_strategy": { "const": "classical_clustering" }
+            }
+          },
+          "then": {
+            "properties": {
+              "centroid_recalculation_classical_clustering_method": true,
+              "centroid_recalculation_interval": true
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "similarity_measure": { "const": "gaussian" }
+            }
+          },
+          "then": {
+            "properties": {
+              "gaussian_similarity_measure_inverse_temperature": true
+            }
+          }
+        }
+      ]
+    },
+    "device": {
+      "description": "The identifier of the device to process this clustering method on. Use 'cuda_if_available' to utilize CUDA whenever available, and use the CPU otherwise.",
+      "type": "string"
+    },
+    "datasets": {
+      "description": "List of dataset configurations to process using this clustering method.",
+      "type": "array",
+      "items": {
+        "$ref": "dataset.json"
+      }
+    }
+  },
+  "required": ["name", "mappings", "phases", "cluster_assignment_strategy", "datasets"]
+}

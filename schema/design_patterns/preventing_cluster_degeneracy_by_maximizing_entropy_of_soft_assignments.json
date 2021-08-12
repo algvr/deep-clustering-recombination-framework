@@ -1,0 +1,30 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "design_patterns/preventing_cluster_degeneracy_by_maximizing_entropy_of_soft_assignments.json",
+    "title": "Configuration for the 'preventing cluster degeneracy by maximizing the entropy of soft assignments' design pattern",
+    "type": "object",
+    "properties": {
+      "pattern": {
+        "description": "The identifier of the design pattern.",
+        "type": "string",
+        "enum": ["preventing_cluster_degeneracy_by_maximizing_entropy_of_soft_assignments"]
+      },
+      "classifier_name": {
+        "description": "If specified, the name of the classifier to obtain cluster assignments from. If not specified, the default cluster assignment strategy of the method is used to obtain cluster assignments for this design pattern. Must be specified when using multiple classifiers, or the classifier to be trained is not used to obtain the cluster assignments computed by the method's default cluster assignment strategy.",
+        "type": "string"
+      },
+      "loss_weight": {
+        "description": "A hyperparameter by which to weight the loss of this design pattern.",
+        "type": "number",
+        "default": 1.0
+      },
+      "loss_optimizer_group_name": {
+        "description": "Specifies the name of the optimizer group that should optimize the loss of this design pattern.",
+        "type": "string",
+        "default": "default"
+      },
+      "batch_augmentation_name": {
+        "description": "Specifies the identifier of the augmentation of the current batch to be used with this design pattern. Two design patterns having the same value for the 'batch_augmentation_name' property will receive identically augmented versions of the current batch. If omitted, only the default transforms specified with the current dataset configuration are applied."
+      }
+    }
+  }

@@ -1,0 +1,138 @@
+{
+  "$schema": "../../schema/method.json",
+  "name": "deep_k_means",
+  "mappings": [
+    {
+      "name": "encoder",
+      "type": "feature_extractor",
+      "layers": [
+        { "name": "enc_flatten_1", "type": "Flatten" },
+        { "name": "enc_linear_2", "type": "Linear", "in_features": 784, "out_features": 500 },
+        { "name": "enc_relu_3", "type": "ReLU" },
+        { "name": "enc_linear_4", "type": "Linear", "in_features": 500, "out_features": 500 },
+        { "name": "enc_relu_5", "type": "ReLU" },
+        { "name": "enc_linear_6", "type": "Linear", "in_features": 500, "out_features": 2000 },
+        { "name": "enc_relu_7", "type": "ReLU" },
+        { "name": "enc_linear_8", "type": "Linear", "in_features": 2000, "out_features": 10 }
+      ],
+      "layer_initialization": [
+        {
+          "layer_names": ["enc_linear_2", "enc_linear_4", "enc_linear_6", "enc_linear_8"],
+          "weight_type": "weight",
+          "type": "xavier_uniform"
+        },
+        {
+          "layer_names": ["enc_linear_2", "enc_linear_4", "enc_linear_6", "enc_linear_8"],
+          "weight_type": "bias",
+          "type": "zeros"
+        }
+      ]
+    },
+    {
+      "name": "decoder",
+      "type": "design_pattern_specific",
+      "layers": [
+        { "name": "dec_linear_1", "type": "Linear", "in_features": 10, "out_features": 2000 },
+        { "name": "dec_relu_2", "type": "ReLU" },
+        { "name": "dec_linear_3", "type": "Linear", "in_features": 2000, "out_features": 500 },
+        { "name": "dec_relu_4", "type": "ReLU" },
+        { "name": "dec_linear_5", "type": "Linear", "in_features": 500, "out_features": 500 },
+        { "name": "dec_relu_6", "type": "ReLU" },
+        { "name": "dec_linear_7", "type": "Linear", "in_features": 500, "out_features": 784 },
+        { "name": "dec_unflatten_8", "type": "Unflatten", "dim": 1, "unflattened_size": [1, 28, 28] }
+      ],
+      "layer_initialization": [
+        {
+          "layer_names": ["dec_linear_1", "dec_linear_3", "dec_linear_5", "dec_linear_7"],
+          "weight_type": "weight",
+          "type": "xavier_uniform"
+        },
+        {
+          "layer_names": ["dec_linear_1", "dec_linear_3", "dec_linear_5", "dec_linear_7"],
+          "weight_type": "bias",
+          "type": "zeros"
+        }
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "name": "single_training_phase",
+      "order": 1,
+      "exit_criteria": { "iterations": 50000 },
+      "performance_evaluation_interval": 100,
+      "save_mapping_parameters": [
+        { "mapping_name": "encoder", "saving_interval": 1000, "path_to_file_or_dir": "./", "keep_old_files": true },
+        { "mapping_name": "decoder", "saving_interval": 1000, "path_to_file_or_dir": "./", "keep_old_files": true }
+      ],
+      "save_centroids": { "path_to_file_or_dir": "./", "saving_interval": 1000, "keep_old_files": true },
+      "design_patterns": [
+        {
+          "pattern": "encouraging_cluster_formation_by_reinforcing_current_assignments_of_samples_to_clusters",
+          "sample_selection_criterion": "all_samples",
+          "cluster_selection_criterion": "all_clusters",
+          "sample_representation": "feature_representation",
+          "cluster_representation": "centroid",
+          "loss_type": "l2",
+          "sample_cluster_pair_loss_weighting_term": "soft_assignment_of_sample_to_cluster",
+          "loss_weight": 0.1,
+          "loss_report_interval": 100
+        },
+        {
+          "pattern": "training_feature_extractor_through_reconstruction_of_samples",
+          "encoder_name": "encoder",
+          "decoder_name": "decoder",
+          "loss_reduction_method": "mean_across_samples",
+          "loss_report_interval": 100
+        }
+      ],
+      "optimizers": [
+        {
+          "type": "Adam",
+          "lr": 0.001,
+          "trained_mappings": ["encoder", "decoder"],
+          "optimizes_centroids": true
+        }
+      ]
+    },
+    {
+      "name": "evaluation",
+      "order": 2,
+      "exit_criteria": { "iterations": 1 },
+      "performance_evaluation_interval": 1
+    }
+  ],
+  "cluster_assignment_strategy": {
+    "type": "feature_representation_centroid_similarity",
+    "similarity_measure": "gaussian",
+    "gaussian_similarity_measure_inverse_temperature": { "annealing_initial_value": 0.1, "annealing_final_value": 28.13, "annealing_iterations_per_value": 1370 },
+    "use_centroids_during_phases": ["single_training_phase", "evaluation"],
+    "centroid_initialization_strategy": "random_uniform_noise",
+    "centroid_recalculation_strategy": "recalculation_by_design_pattern"
+  },
+  "datasets": [
+    {
+      "name": "MNIST-Train",
+      "dataset": "MNIST",
+      "root": "../../datasets/mnist",
+      "train": true,
+      "download": true,
+      "batch_size": 256,
+      "num_clusters": 10,
+      "phases": ["single_training_phase"],
+      "shuffle": true
+    },
+    {
+      "name": "MNIST-Test",
+      "dataset": "MNIST",
+      "root": "../../datasets/mnist",
+      "train": false,
+      "download": true,
+      "batch_size": 256,
+      "num_clusters": 10,
+      "phases": ["evaluation"],
+      "reinitialize_mappings": false
+    }
+  ],
+  "training_device": "cuda_if_available"
+}

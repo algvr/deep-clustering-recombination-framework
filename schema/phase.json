@@ -1,0 +1,264 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "phase.json",
+  "title": "Phase",
+  "description": "Configuration for a training phase of a deep-learning-based clustering method.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "Name used to reference this phase.",
+      "type": "string"
+    },
+    "order": {
+      "description": "Order in which the clustering method should process this phase, when processing a dataset configuration. When working with a dataset configuration, phases are processed in ascending order of their values of this property.",
+      "type": "number"
+    },
+    "enabled": {
+      "description": "Specifies whether to process this phase (true by default).",
+      "type": "boolean",
+      "default": true
+    },
+    "exit_criteria": {
+      "descriptions": "Specifies a set of exit criteria. The clustering method will stop processing this phase once any of the specified criteria are met, and either process the next phase or terminate, if no phase to process is found.",
+      "type": "object",
+      "properties": {
+        "iterations": {
+          "description": "Specifies the maximum number of iterations to remain in this phase.",
+          "type": "number"
+        },
+        "epochs": {
+          "description": "Specifies the maximum number of epochs to remain in this phase.",
+          "type": "number"
+        },
+        "performance_evaluation_acc_gt": {
+          "description": "Specifies an upper threshold on the ACC performance (between 0.0 and 1.0) determined during a performance evaluation of the clustering method. Once the threshold is passed, this phase is exited.",
+          "type": "number"
+        },
+        "performance_evaluation_nmi_gt": {
+          "description": "Specifies an upper threshold on the NMI performance (between -1.0 and 1.0) determined during a performance evaluation of the clustering method. Once the threshold is passed, this phase is exited.",
+          "type": "number"
+        },
+        "performance_evaluation_ari_gt": {
+          "description": "Specifies an upper threshold on the ARI performance (between 0.0 and 1.0) determined during a performance evaluation of the clustering method. Once the threshold is passed, this phase is exited.",
+          "type": "number"
+        },
+        "performance_evaluation_cluster_reassignment_ratio_lt": {
+          "description": "Specifies a lower threshold on the relative amount of samples (between 0.0 and 1.0) that change their associated cluster between two consecutive performance evaluations of the clustering method. Once the threshold is passed, this phase is exited.",
+          "type": "number"
+        },
+        "performance_evaluation_acc_lt_after_iterations": {
+          "description": "Specifies a lower threshold on the ACC performance (between 0.0 and 1.0) determined during any performance evaluation after the specified number of iterations in this phase.",
+          "type": "object",
+          "properties": {
+            "value": {
+              "description": "The lower threshold on the ACC performance.", 
+              "type": "number"
+            },
+            "iterations": {
+              "description": "The minimum number of iterations in this phase for the threshold to take effect.",
+              "type": "number"
+            }
+          },
+          "required": ["value", "iterations"]
+        },
+        "performance_evaluation_nmi_lt_after_iterations": {
+          "description": "Specifies a lower threshold on the NMI performance (between -1.0 and 1.0) determined during any performance evaluation after the specified number of iterations in this phase.",
+          "type": "object",
+          "properties": {
+            "value": {
+              "description": "The lower threshold on the NMI performance.", 
+              "type": "number"
+            },
+            "iterations": {
+              "description": "The minimum number of iterations in this phase for the threshold to take effect.",
+              "type": "number"
+            }
+          },
+          "required": ["value", "iterations"]
+        },
+        "performance_evaluation_ari_lt_after_iterations": {
+          "description": "Specifies a lower threshold on the ARI performance (between 0.0 and 1.0) determined during any performance evaluation after the specified number of iterations in this phase.",
+          "type": "object",
+          "properties": {
+            "value": {
+              "description": "The lower threshold on the ARI performance.", 
+              "type": "number"
+            },
+            "iterations": {
+              "description": "The minimum number of iterations in this phase for the threshold to take effect.",
+              "type": "number"
+            }
+          },
+          "required": ["value", "iterations"]
+        }
+      }
+    },
+    "performance_evaluation_interval": {
+      "description": "The interval, in iterations, in which performance evaluations of this clustering method are performed during this phase.",
+      "type": "number"
+    },
+    "load_mapping_parameters": {
+      "description": "Specifies the names of the trainable mappings of which to load parameters upon entering this phase, and the paths to the torch files with their respective parameters.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "mapping_name": {
+            "description": "Name of the mapping of which to load parameters upon entering this phase.",
+            "type": "string"
+          },
+          "path_to_file": {
+            "description": "Path (absolute, or relative to the directory of the method configuration file) to the torch file with the parameters of this mapping.",
+            "type": "string"
+          }
+        },
+        "required": ["mapping_name", "path_to_file"]
+      }
+    },
+    "save_mapping_parameters": {
+      "description": "Specifies the names of the trainable mappings of which to save parameters during this phase, and the paths to the files or directories into which to save their respective parameters.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "mapping_name": {
+            "description": "Name of the mapping to save parameters of.",
+            "type": "string"
+          },
+          "saving_interval": {
+            "description": "Interval, in iterations, in which to save the parameters of the specified mapping.",
+            "type": "number"
+          },
+          "path_to_file_or_dir": {
+            "description": "Path (absolute, or relative to the directory of the method configuration file) to file or directory to save the mapping's parameters into. If a directory is specified, the file is named according to the method name, dataset name, and mapping name if 'keep_old_files' is set to true.",
+            "type": "string"
+          },
+          "keep_old_files": {
+            "descriptions": "Specifies whether existing files should NOT be overwritten in case of a name conflict.",
+            "type": "boolean"
+          }
+        },
+        "required": ["mapping_name", "saving_interval", "path_to_file_or_dir", "keep_old_files"]
+      }
+    },
+    "save_centroids": {
+      "type": "object",
+      "properties": {
+        "saving_interval": {
+          "description": "Interval, in iterations, in which to save the centroid tensors.",
+          "type": "number"
+        },
+        "path_to_file_or_dir": {
+          "description": "Path (absolute, or relative to the directory of the method configuration file) to file or directory to save the centroid tensors into. If a directory is specified, the file is named according to the method name and dataset name.",
+          "type": "string"
+        },
+        "keep_old_files": {
+          "descriptions": "Specifies whether existing files should NOT be overwritten in case of a name conflict.",
+          "type": "boolean"
+        }
+      },
+      "required": ["saving_interval", "path_to_file_or_dir", "keep_old_files"]
+    },
+    "design_patterns": {
+      "description": "Configures the design patterns to be used during this phase.",
+      "type": "array",
+      "items": {
+        "$ref": "design_pattern.json"
+      }
+    },
+    "optimizers": {
+      "description": "List of optimizers to use during this phase for training mappings. Properties will be passed as named arguments to the constructor of the respective optimizer.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "Name used to reference this optimizer, e.g. by learning rate scheduler configurations in 'optimizer_learning_rate_schedulers'.",
+            "type": "string"
+          },
+          "type": {
+            "description": "The class name (in 'torch.optim') of the optimizer.",
+            "type": "string"
+          },
+          "trained_mapping_names": {
+            "description": "Names of the mappings whose parameters this optimizer should optimize. During any iteration, each mapping should be trained by at most one active optimizer.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "group_name": {
+            "description": "Name of the optimizer group that this optimizer is associated to (if omitted, optimizer is associated to the 'default' optimizer group). Design patterns specify an optimizer group for each of their losses to exclusively optimize the respective loss.",
+            "type": "string",
+            "default": "default"
+          },
+          "optimizes_centroids": {
+            "description": "If set to true, this optimizer will optimize the current centroids (false by default).",
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": ["type"],
+        "anyOf": [
+          {
+            "required": ["trained_mapping_names"]
+          },
+          {
+            "properties": {
+              "optimizes_centroids": { "const": true }
+            }
+          }
+        ]
+      }
+    },
+    "optimizer_cycle": {
+      "description": "Specifies which optimizers should be active for how many iterations. The cycle is restarted if the sum of the specified iteration numbers is exceeded.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "active_optimizer_names": {
+            "description": "The optimizers which should be active.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "num_iterations": {
+            "description": "The number of iterations to use the specified optimizers (exclusively).",
+            "type": "number"
+          }
+        }
+      }
+    },
+    "optimizer_learning_rate_schedulers": {
+      "description": "A list of learning rate schedulers to use with the specified optimizers. Properties will be passed as named arguments to the constructor of the respective learning rate scheduler.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "description": "The class name (in torch.optim.lr_scheduler) of the learning rate scheduler.",
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": ["name", "order", "exit_criteria"],
+  "anyOf": [
+    {
+      "not": {
+        "properties": {
+          "exit_criteria": { "performance_evaluation_acc": false, "performance_evaluation_nmi": false, "performance_evaluation_ari": false, "performance_evaluation_cluster_reassignment_ratio": false }
+        }
+      },
+      "required": ["performance_evaluation_interval"]
+    },
+    {
+      "properties": {
+        "exit_criteria": { "performance_evaluation_acc": false, "performance_evaluation_nmi": false, "performance_evaluation_ari": false, "performance_evaluation_cluster_reassignment_ratio": false }
+      }
+    }
+  ]
+}

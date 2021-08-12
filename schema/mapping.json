@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "trainable_mapping.json",
+  "title": "Trainable mapping",
+  "description": "Configuration for a trainable mapping used as part of a deep-learning-based clustering method.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "Name used to reference the trainable mapping, e.g. in design patterns.",
+      "type": "string"
+    },
+    "type": {
+      "description": "Type of the trainable mapping.",
+      "type": "string",
+      "enum": ["feature_extractor", "feature_space_classifier", "sample_space_classifier", "design_pattern_specific"]
+    },
+    "layers": {
+      "description": "List of layers of the trainable mapping. Properties will be passed as named arguments to the constructor of the respective layer.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "description": "The class name (in 'torch.nn') of the layer.",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name used to reference the layer, e.g. in design patterns.",
+            "type": "string"
+          }
+        },
+        "required": ["type"]
+      }
+    },
+    "layer_initialization": {
+      "description": "Specification of how to initialize the layers. Properties will be passed as named arguments to the respective initialization method.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "layer_names": {
+            "description": "Name of the layers this configuration concerns.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "weight_type": {
+            "description": "Specifies which part of the layers this configuration concerns.",
+            "type": "string",
+            "enum": ["weight", "bias"]
+          },
+          "type": {
+            "description": "The initialization method (in 'torch.nn.init') to use.",
+            "type": "string"
+          }
+        },
+        "required": ["layer_names", "weight_type", "type"]
+      }
+    },
+    "pre_processing_functions": {
+      "description": "Name of the functions (in 'torch.nn.functional') to pre-process the trainable mapping's input with. Properties will be passed as named arguments to the respective functions. Functions are applied in their order of listing. If omitted, no pre-processing of the trainable mapping's input is performed.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "function_name": {
+            "description": "Name of the function.",
+            "type": "string"
+          },
+          "input_argument_name": {
+            "description": "The name of the argument in which the function receives the Tensor to be processed.",
+            "type": "string"
+          }
+        },
+        "required": ["function_name"]
+      }
+    },
+    "post_processing_functions": {
+      "description": "Name of the functions (in 'torch.nn.functional') to post-process the trainable mapping's output with. Properties will be passed as named arguments to the respective functions. Functions are applied in their order of listing. If omitted, no post-processing of the trainable mapping's output is performed.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "function_name": {
+            "description": "Name of the function.",
+            "type": "string"
+          },
+          "input_argument_name": {
+            "description": "The name of the argument in which the function receives the Tensor to be processed.",
+            "type": "string"
+          }
+        },
+        "required": ["function_name", "input_argument_name"]
+      }
+    },
+    "associated_feature_extractor_name": {
+      "description": "If the trainable mapping has type 'feature_space_classifier', specifies the name of the feature extractor from which to obtain feature representations for classification.",
+      "type": "string"
+    },
+    "softmax_layer_name": {
+      "description": "If the trainable mapping has type 'feature_space_classifier' or 'sample_space_classifier', can be used to specify the name of the softmax layer, if any. This layer is then omitted when calculating logits (e.g. for a cross-entropy loss).",
+      "type": "string"
+    },
+    "prior_mapping_name": {
+      "description": "Can be used to chain trainable mappings: specifies the name of the prior trainable mapping which should process any input to this trainable mapping (from design patterns or as part of a cluster assignment strategy). Afterwards, the output of the prior trainable mapping is fed into this trainable mapping. The trainable mapping producing the final output in a chain of trainable mappings can then be referenced by a design pattern or as part of a cluster assignment strategy.",
+      "type": "string"
+    }
+  },
+  "required": ["type"],
+  "anyOf": [
+    {
+      "properties": {
+        "type": { "const": "feature_space_classifier" }
+      }
+    },
+    {
+      "properties": {
+        "associated_feature_extractor_name": false
+      }
+    }
+  ]
+}

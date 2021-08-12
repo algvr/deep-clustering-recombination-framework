@@ -1,0 +1,180 @@
+{
+  "$schema": "../../schema/method.json",
+  "name": "dec_cc_hybrid_mnist",
+  "mappings": [
+    {
+      "name": "encoder",
+      "type": "feature_extractor",
+      "layers": [
+        { "name": "enc_flatten_1", "type": "Flatten" },
+        { "name": "enc_linear_2", "type": "Linear", "in_features": 784, "out_features": 500 },
+        { "name": "enc_relu_3", "type": "ReLU" },
+        { "name": "enc_linear_4", "type": "Linear", "in_features": 500, "out_features": 500 },
+        { "name": "enc_relu_5", "type": "ReLU" },
+        { "name": "enc_linear_6", "type": "Linear", "in_features": 500, "out_features": 2000 },
+        { "name": "enc_relu_7", "type": "ReLU" },
+        { "name": "enc_linear_8", "type": "Linear", "in_features": 2000, "out_features": 10 }
+      ]
+    },
+    {
+      "name": "decoder",
+      "type": "design_pattern_specific",
+      "layers": [
+        { "name": "dec_linear_1", "type": "Linear", "in_features": 10, "out_features": 2000 },
+        { "name": "dec_relu_2", "type": "ReLU" },
+        { "name": "dec_linear_3", "type": "Linear", "in_features": 2000, "out_features": 500 },
+        { "name": "dec_relu_4", "type": "ReLU" },
+        { "name": "dec_linear_5", "type": "Linear", "in_features": 500, "out_features": 500 },
+        { "name": "dec_relu_6", "type": "ReLU" },
+        { "name": "dec_linear_7", "type": "Linear", "in_features": 500, "out_features": 784 },
+        { "name": "dec_unflatten_8", "type": "Unflatten", "dim": 1, "unflattened_size": [1, 28, 28] }
+      ]
+    },
+    {
+      "name": "instance_level_contrastive_head",
+      "type": "design_pattern_specific",
+      "prior_mapping_name": "encoder",
+      "layers": [
+        { "type": "Linear", "in_features": 10, "out_features": 512 },
+        { "type": "ReLU" },
+        { "type": "Linear", "in_features": 512, "out_features": 128 }
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "name": "pretraining",
+      "order": 1,
+      "exit_criteria": { "iterations": 50000 },
+      "save_mapping_parameters": [
+        { "mapping_name": "encoder", "saving_interval": 1000, "path_to_file_or_dir": "pretrained/", "keep_old_files": true },
+        { "mapping_name": "decoder", "saving_interval": 1000, "path_to_file_or_dir": "pretrained/", "keep_old_files": true }
+      ],
+      "design_patterns": [
+        {
+          "pattern": "training_feature_extractor_through_reconstruction_of_samples",
+          "encoder_name": "encoder",
+          "decoder_name": "decoder",
+          "loss_report_interval": 500
+        }
+      ],
+      "optimizers": [
+        {
+          "type": "SGD",
+          "lr": 0.001,
+          "momentum": 0.9,
+          "trained_mappings": ["encoder", "decoder"]
+        }
+      ]
+    },
+    {
+      "name": "finetuning",
+      "order": 2,
+      "exit_criteria": { "iterations": 100000 },
+      "performance_evaluation_interval": 500,
+      "save_mapping_parameters": [
+        { "mapping_name": "encoder", "saving_interval": 1000, "path_to_file_or_dir": "./", "keep_old_files": true },
+        { "mapping_name": "instance_level_contrastive_head", "saving_interval": 1000, "path_to_file_or_dir": "./", "keep_old_files": true }
+      ],
+      "save_centroids": { "path_to_file_or_dir": "./", "saving_interval": 1000, "keep_old_files": true },
+      "design_patterns": [
+        {
+          "pattern": "learning_feature_representations_by_using_contrastive_learning_and_data_augmentation",
+          "contrastive_learning_head_name": "instance_level_contrastive_head",
+          "batch_augmentation_name_1": "batch_augmentation_1",
+          "batch_augmentation_name_2": "batch_augmentation_2",
+          "temperature_parameter": 0.5,
+          "loss_report_interval": 500
+        },
+        {
+          "pattern": "learning_invariance_to_transformations_by_using_assignment_statistics_vectors_and_data_augmentation",
+          "batch_augmentation_name_1": "batch_augmentation_1",
+          "batch_augmentation_name_2": "batch_augmentation_2",
+          "temperature_parameter": 1.0,
+          "loss_report_interval": 500
+        },
+        {
+          "pattern": "encouraging_cluster_formation_by_minimizing_divergence_between_current_and_target_cluster_assignment_distribution",
+          "loss_weight": 0.5,
+          "target_distribution_recalculation_interval": 140,
+          "loss_report_interval": 500
+        },
+        {
+          "pattern": "preventing_cluster_degeneracy_by_maximizing_entropy_of_soft_assignments",
+          "batch_augmentation_name": "batch_augmentation_1",
+          "loss_report_interval": 500
+        },
+        {
+          "pattern": "preventing_cluster_degeneracy_by_maximizing_entropy_of_soft_assignments",
+          "batch_augmentation_name": "batch_augmentation_2",
+          "loss_report_interval": 500
+        }
+      ],
+      "optimizers": [
+        {
+          "type": "SGD",
+          "lr": 0.001,
+          "momentum": 0.9,
+          "trained_mappings": ["encoder", "instance_level_contrastive_head"],
+          "optimizes_centroids": true
+        }
+      ]
+    },
+    {
+      "name": "evaluation",
+      "order": 3,
+      "exit_criteria": { "iterations": 1 },
+      "performance_evaluation_interval": 1
+    }
+  ],
+  "cluster_assignment_strategy": {
+    "type": "feature_representation_centroid_similarity",
+    "similarity_measure": "student_t",
+    "use_centroids_during_phases": ["finetuning", "evaluation"],
+    "centroid_initialization_strategy": "classical_clustering",
+    "centroid_initialization_classical_clustering_method": "k_means",
+    "centroid_recalculation_strategy": "recalculation_by_design_pattern"
+  },
+  "datasets": [
+    {
+      "name": "MNIST-Train",
+      "dataset": "MNIST",
+      "root": "../../datasets/mnist",
+      "train": true,
+      "download": true,
+      "batch_size": 256,
+      "num_clusters": 10,
+      "phases": ["pretraining", "finetuning"],
+      "batch_augmentations": [
+        {
+          "name": "batch_augmentation_1",
+          "transforms": [
+            { "type": "RandomResizedCrop", "size": [28, 28], "scale": [0.75, 1.0], "ratio": [0.75, 1.333] },
+            { "type": "RandomAffine", "degrees": 20 },
+            { "type": "ToTensor" }
+          ]
+        },
+        {
+          "name": "batch_augmentation_2",
+          "transforms": [
+            { "type": "RandomResizedCrop", "size": [28, 28], "scale": [0.75, 1.0], "ratio": [0.75, 1.333] },
+            { "type": "RandomAffine", "degrees": 20 },
+            { "type": "ToTensor" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MNIST-Test",
+      "dataset": "MNIST",
+      "root": "../../datasets/mnist",
+      "train": false,
+      "download": true,
+      "batch_size": 256,
+      "num_clusters": 10,
+      "phases": ["evaluation"],
+      "reinitialize_mappings": false
+    }
+  ],
+  "training_device": "cuda_if_available"
+}

@@ -1,0 +1,82 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "design_patterns/training_feature_extractor_by_using_adversarial_interpolation.json",
+    "title": "Configuration for the 'training a feature extractor by using adversarial interpolation' design pattern.",
+    "type": "object",
+    "properties": {
+      "pattern": {
+        "description": "The identifier of the design pattern.",
+        "type": "string",
+        "enum": ["training_feature_extractor_by_using_adversarial_interpolation"]
+      },
+      "encoder_name": {
+        "description": "The name of the encoder mapping (feature extractor) to be used.",
+        "type": "string"
+      },
+      "decoder_name": {
+        "description": "The name of the decoder mapping to be used.",
+        "type": "string"
+      },
+      "critic_name": {
+        "description": "The name of the critic mapping to be used, if the adversarial mapping to be used is a critic.",
+        "type": "string"
+      },
+      "discriminator_name": {
+        "description": "The name of the discriminator mapping to be used, if the adversarial mapping to be used is a discriminator.",
+        "type": "string"
+      },
+      "critic_regularizing_hyperparameter": {
+        "description": "The hyperparameter gamma to be used when regularizing the critic using interpolations of samples and their reconstructions by the autoencoder.",
+        "type": "number",
+        "default": 0.2
+      },
+      "autoencoder_loss_weight": {
+        "description": "The weight of the autoencoder loss.",
+        "type": "number",
+        "default": 1.0
+      },
+      "critic_loss_weight": {
+        "description": "The weight of the critic loss.",
+        "type": "number",
+        "default": 1.0
+      },
+      "discriminator_loss_weight": {
+        "description": "The weight of the discriminator loss.",
+        "type": "number",
+        "default": 1.0
+      },
+      "autoencoder_loss_optimizer_group_name": {
+        "description": "Specifies the name of the optimizer group that should optimize the autoencoder loss of this design pattern.",
+        "type": "string"
+      },
+      "critic_loss_optimizer_group_name": {
+        "description": "Specifies the name of the optimizer group that should optimize the autoencoder loss of this design pattern.",
+        "type": "string"
+      },
+      "discriminator_loss_optimizer_group_name": {
+        "description": "Specifies the name of the optimizer group that should optimize the autoencoder loss of this design pattern.",
+        "type": "string"
+      },
+      "batch_augmentation_name": {
+        "description": "Specifies the identifier of the augmentation of the current batch to be used with this design pattern. Two design patterns having the same value for the 'batch_augmentation_name' property will receive identically augmented versions of the current batch. If omitted, only the default transforms specified with the current dataset configuration are applied."
+      }
+    },
+    "required": ["encoder_name", "decoder_name", "autoencoder_loss_optimizer_group_name"],
+    "oneOf": [
+      {
+        "required": ["critic_name", "critic_loss_optimizer_group_name"],
+        "properties": {
+          "discriminator_name": false,
+          "discriminator_loss_weight": false
+        }
+      },
+      {
+        "required": ["discriminator_name", "discriminator_loss_optimizer_group_name"],
+        "properties": {
+          "critic_name": false,
+          "critic_regularizing_hyperparameter": false,
+          "critic_loss_weight": false
+        }
+      }
+    ]
+  }
